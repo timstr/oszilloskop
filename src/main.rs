@@ -4,7 +4,7 @@ use eframe::egui;
 fn main() {
     let native_options = eframe::NativeOptions::default();
     eframe::run_native(
-        "My egui App",
+        "Oszilloskop",
         native_options,
         Box::new(|cc| Box::new(OszilloskopApp::new(cc))),
     )
