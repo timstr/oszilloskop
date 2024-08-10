@@ -12,6 +12,8 @@ Oszilloskop simulates an electron beam against a phosphor screen which is deflec
 
 -   **Beam Strength** : how intensely the beam departs energy onto the screen per unit time
 -   **Gain** : how much to amplify the input signal, e.g. how much to scale it about the center of the screen
+-   **Logarithmic** : if enabled, apply logarithmic scaling on the signal magnitude
+-   **Logarithmic Range** : if Logarithmic is enabled, the size of the dynamic range to include (in powers of two)
 -   **Decay** : how rapidly images on the screen fade
 -   **Rotation** : how much to turn the image, in multiples of 45 degrees
 -   **Flip** : whether to swap x and y
