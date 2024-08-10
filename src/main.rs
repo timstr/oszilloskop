@@ -125,6 +125,8 @@ struct OszilloskopApp {
     exposure: f32,
     gain: f32,
     decay: f32,
+    logarithmic_enable: bool,
+    logarithmic_range: f32,
     rotation: u8,
     flip: bool,
     prev_sample: (f32, f32),
@@ -185,6 +187,8 @@ impl OszilloskopApp {
             buffer_receiver: rx,
             exposure: 5.0,
             gain: 0.7,
+            logarithmic_enable: false,
+            logarithmic_range: 15.0,
             decay: 0.3,
             rotation: 1,
             flip: true,
@@ -214,6 +218,9 @@ impl OszilloskopApp {
 
             let (sin_theta, cos_theta) = theta.sin_cos();
 
+            let min_val = (-self.logarithmic_range).exp2();
+            let inv_log_scale: f32 = -1.0 / self.logarithmic_range;
+
             let mut s_prev = self.prev_sample;
             for s in buffer.l.iter().cloned().zip(buffer.r.iter().cloned()) {
                 let s = if self.flip { (s.1, s.0) } else { s };
@@ -221,6 +228,16 @@ impl OszilloskopApp {
                     s.0 * cos_theta + s.1 * sin_theta,
                     s.0 * -sin_theta + s.1 * cos_theta,
                 );
+
+                let s = if self.logarithmic_enable {
+                    let length = s.0.hypot(s.1);
+                    let log_len = length.max(min_val).log2();
+                    let t = (log_len + self.logarithmic_range) * inv_log_scale;
+                    let k = t / length;
+                    (k * s.0, k * s.1)
+                } else {
+                    s
+                };
 
                 let x0 = (0.5 + 0.5 * self.gain * s_prev.0).clamp(0.0, 1.0) * w;
                 let y0 = (0.5 - 0.5 * self.gain * s_prev.1).clamp(0.0, 1.0) * h;
@@ -268,6 +285,16 @@ impl eframe::App for OszilloskopApp {
                     ui.add(egui::Slider::new(&mut self.gain, 0.0..=100.0).logarithmic(true));
                     ui.separator();
                     ui.label("Gain");
+                });
+
+                ui.horizontal(|ui| {
+                    ui.toggle_value(&mut self.logarithmic_enable, "Logarithmic");
+                    ui.separator();
+                    if self.logarithmic_enable {
+                        ui.add(egui::Slider::new(&mut self.logarithmic_range, 0.0..=30.0));
+                        ui.separator();
+                        ui.label("Range");
+                    }
                 });
 
                 ui.horizontal(|ui| {
